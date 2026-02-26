@@ -67,6 +67,72 @@ Claude 에이전트를 **claude-opus-4-6**으로 업그레이드.
 
 ---
 
+## 5. OpenCode 업그레이드
+
+```bash
+# 최신 버전으로 업그레이드 (내장 명령어)
+opencode upgrade
+
+# 또는 npm으로 직접
+npm install -g opencode-ai@latest
+```
+
+특정 버전으로 고정하려면:
+
+```bash
+opencode upgrade v1.2.10
+```
+
+---
+
+## 6. Oh-My-OpenCode 업그레이드 & 재설정
+
+### 업그레이드
+
+```bash
+bunx oh-my-opencode install
+```
+
+설치와 업그레이드가 동일 명령어. 실행하면 최신 버전으로 갱신되고, 기존 설정(`oh-my-opencode.json`)은 **자동 백업** 후 재생성된다.
+
+### 환경설정 재설정
+
+구독 구성이 바뀌었거나 설정을 처음부터 다시 잡고 싶을 때:
+
+```bash
+# 1. 기존 설정 파일 삭제 (백업은 .bak 파일로 남아있음)
+rm ~/.config/opencode/oh-my-opencode.json
+
+# 2. 재설치 — TUI 마법사가 뜨면서 구독 여부를 다시 물어봄
+bunx oh-my-opencode install
+```
+
+TUI 없이 플래그로 바로 지정하려면:
+
+```bash
+# Claude API키 + OpenCode Zen 사용 기준
+bunx oh-my-opencode install --no-tui --claude=yes --openai=no --gemini=no --opencode-zen=yes
+```
+
+| 플래그 | 의미 |
+|--------|------|
+| `--claude=yes` | Claude 구독/API키 보유 |
+| `--claude=max20` | Claude Max $20 플랜 |
+| `--openai=yes` | ChatGPT Plus/Pro 보유 |
+| `--gemini=yes` | Google AI Pro 보유 |
+| `--opencode-zen=yes` | OpenCode Zen API 키 보유 |
+| `--no-tui` | 대화형 마법사 없이 바로 실행 |
+
+### 설정 파일 위치
+
+| 파일 | 설명 |
+|------|------|
+| `~/.config/opencode/oh-my-opencode.json` | 에이전트별 모델 설정 |
+| `~/.config/opencode/opencode.json` | 플러그인·프로바이더 설정 |
+| `~/.config/opencode/oh-my-opencode.json.bak.*` | 자동 백업 (날짜별) |
+
+---
+
 ## 참고: 최종 설정 JSON
 
 ```json
