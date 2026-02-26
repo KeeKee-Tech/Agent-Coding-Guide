@@ -11,6 +11,7 @@
 - [태스크 카테고리별 모델](#태스크-카테고리별-모델)
 - [인증 방법 가이드](#인증-방법-가이드)
 - [구독 필요 여부 및 추천](#구독-필요-여부-및-추천)
+- [공식 추천 모델 조합 및 업그레이드 로드맵](#공식-추천-모델-조합-및-업그레이드-로드맵)
 - [참고: 인증 파일 위치](#참고-인증-파일-위치)
 
 ---
@@ -191,6 +192,189 @@ opencode auth login  # → OpenAI → ChatGPT Plus/Pro 선택
    → OpenCode Zen 쿼터 문제 발생 시 대안
    → oracle, momus, hephaestus 등 GPT 에이전트 독립적 운용
 ```
+
+---
+
+## 공식 추천 모델 조합 및 업그레이드 로드맵
+
+oh-my-opencode가 공식적으로 설계한 최적 모델 조합을 향해 단계적으로 업그레이드하는 로드맵.  
+현재 설정에서 시작해 Phase 3 최종 목표까지 순서대로 진행하면 된다.
+
+---
+
+### 현재 vs 공식 추천 비교표
+
+| 에이전트/카테고리 | 현재 설정 | 공식 최종 추천 | 변경 이유 |
+|----------------|----------|--------------|---------|
+| **sisyphus** | `claude-sonnet-4-6` (high) | `claude-opus-4-6` (high) | 오케스트레이터는 최고 성능 필요 |
+| **oracle** | `gpt-5.2` (high) | `gpt-5.2` (high) | ✅ 이미 최적 |
+| **librarian** | `glm-4.7-free` | `glm-4.7` (유료) | free 모델은 성능/속도 제한 |
+| **explore** | `claude-haiku-4-5` | `xai/grok-code-fast-1` | 코드 탐색 특화 모델로 교체 |
+| **prometheus** | `claude-sonnet-4-6` (max) | `claude-opus-4-6` (max) | 계획 수립은 최고 모델 필요 |
+| **metis** | `claude-sonnet-4-6` (max) | `claude-opus-4-6` (max) | 분석 깊이 향상 |
+| **momus** | `gpt-5.2` (medium) | `gpt-5.2` (medium) | ✅ 이미 최적 |
+| **hephaestus** | `gpt-5.3-codex` (medium) | `gpt-5.3-codex` (medium) | ✅ 이미 최적 |
+| **atlas** | `kimi-k2.5-free` | `claude-sonnet-4-5` | 보조 에이전트 품질 향상 |
+| **unspecified-high** | `claude-sonnet-4-6` | `claude-opus-4-6` (max) | 고난이도 작업 품질 향상 |
+| **deep** | `gpt-5.3-codex` (medium) | `gpt-5.3-codex` (medium) | ✅ 이미 최적 |
+| **ultrabrain** | `gpt-5.3-codex` (xhigh) | `gpt-5.3-codex` (xhigh) | ✅ 이미 최적 |
+
+---
+
+### Phase 1 — 현재 상태 (무료 중심, $0 추가 비용)
+
+> **목표**: 현재 설정을 그대로 유지하며 안정적으로 사용하는 단계.  
+> 무료 모델(glm-4.7-free, kimi-k2.5-free)과 OpenCode Zen에 의존.
+
+```json
+{
+  "agents": {
+    "sisyphus":               { "model": "anthropic/claude-sonnet-4-6",     "variant": "high" },
+    "oracle":                 { "model": "opencode/gpt-5.2",                "variant": "high" },
+    "librarian":              { "model": "opencode/glm-4.7-free" },
+    "explore":                { "model": "anthropic/claude-haiku-4-5" },
+    "prometheus":             { "model": "anthropic/claude-sonnet-4-6",     "variant": "max" },
+    "metis":                  { "model": "anthropic/claude-sonnet-4-6",     "variant": "max" },
+    "momus":                  { "model": "opencode/gpt-5.2",                "variant": "medium" },
+    "hephaestus":             { "model": "opencode/gpt-5.3-codex",          "variant": "medium" },
+    "atlas":                  { "model": "opencode/kimi-k2.5-free" },
+    "multimodal-looker":      { "model": "google/gemini-3-flash-preview" },
+    "frontend-ui-ux-engineer":{ "model": "google/antigravity-gemini-3-pro-high" },
+    "document-writer":        { "model": "google/antigravity-gemini-3-flash" }
+  },
+  "categories": {
+    "quick":              { "model": "anthropic/claude-haiku-4-5" },
+    "unspecified-low":    { "model": "anthropic/claude-sonnet-4-6" },
+    "unspecified-high":   { "model": "anthropic/claude-sonnet-4-6" },
+    "visual-engineering": { "model": "google/gemini-3-pro-preview",   "variant": "high" },
+    "artistry":           { "model": "google/gemini-3-pro-preview",   "variant": "high" },
+    "writing":            { "model": "google/gemini-3-flash-preview" },
+    "deep":               { "model": "opencode/gpt-5.3-codex",        "variant": "medium" },
+    "ultrabrain":         { "model": "opencode/gpt-5.3-codex",        "variant": "xhigh" }
+  }
+}
+```
+
+**Phase 1 주의사항**:
+- Claude OAuth는 계정 정지 위험이 있으므로 모니터링 필요
+- 무료 모델(`glm-4.7-free`, `kimi-k2.5-free`)은 속도와 품질이 제한적
+- OpenCode Zen 쿼터 소진 시 GPT/GLM/Kimi 계열 에이전트 중단
+
+---
+
+### Phase 2 — 안정화 단계 (월 ~$20 추가)
+
+> **목표**: Claude 계정 정지 위험 해소 + Gemini 할당량 확보.  
+> 인증을 안전하게 바꾸고, Gemini 에이전트를 실용적으로 사용하는 단계.
+
+**변경 사항**:
+1. **Anthropic API 키 발급** → OAuth에서 API 키로 전환 (계정 정지 위험 해소)
+2. **Google AI Pro 구독** ($20/월) → antigravity 할당량 5시간 갱신 확보
+
+```bash
+# Anthropic API 키 전환
+opencode auth login  # → Anthropic → API Key 선택 → sk-ant-... 입력
+
+# Google AI Pro 구독 후 이미 antigravity OAuth가 설정되어 있으면 자동 반영
+```
+
+**모델 설정은 Phase 1과 동일**, 인증만 변경.
+
+**Phase 2 달성 효과**:
+- Claude 모델: 안전하고 안정적인 사용 ✅
+- Gemini 에이전트: 5시간마다 할당량 갱신으로 사실상 제한 없이 사용 ✅
+- GPT/GLM: OpenCode Zen 그대로 (Zen 쿼터에 의존)
+
+---
+
+### Phase 3 — 최적 설정 (월 ~$40~60 추가, 최종 목표)
+
+> **목표**: oh-my-opencode 공식 추천 모델 조합 완성.  
+> 핵심 에이전트를 최고 성능 모델로 교체하고, 무료 모델에서 탈피.
+
+**추가 변경 사항**:
+1. `sisyphus`, `prometheus`, `metis` → **claude-opus-4-6** 업그레이드
+2. `explore` → **xai/grok-code-fast-1** 교체 (코드 탐색 특화)
+3. `librarian` → **glm-4.7** 유료 버전 교체
+4. `atlas` → **claude-sonnet-4-5** 교체
+5. `unspecified-high` 카테고리 → **claude-opus-4-6 (max)**
+
+```json
+{
+  "agents": {
+    "sisyphus":               { "model": "anthropic/claude-opus-4-6",      "variant": "high" },
+    "oracle":                 { "model": "opencode/gpt-5.2",               "variant": "high" },
+    "librarian":              { "model": "opencode/glm-4.7" },
+    "explore":                { "model": "xai/grok-code-fast-1" },
+    "prometheus":             { "model": "anthropic/claude-opus-4-6",      "variant": "max" },
+    "metis":                  { "model": "anthropic/claude-opus-4-6",      "variant": "max" },
+    "momus":                  { "model": "opencode/gpt-5.2",               "variant": "medium" },
+    "hephaestus":             { "model": "opencode/gpt-5.3-codex",         "variant": "medium" },
+    "atlas":                  { "model": "anthropic/claude-sonnet-4-5" },
+    "multimodal-looker":      { "model": "google/gemini-3-flash-preview" },
+    "frontend-ui-ux-engineer":{ "model": "google/antigravity-gemini-3-pro-high" },
+    "document-writer":        { "model": "google/antigravity-gemini-3-flash" }
+  },
+  "categories": {
+    "quick":              { "model": "anthropic/claude-haiku-4-5" },
+    "unspecified-low":    { "model": "anthropic/claude-sonnet-4-5" },
+    "unspecified-high":   { "model": "anthropic/claude-opus-4-6",    "variant": "max" },
+    "visual-engineering": { "model": "google/gemini-3-pro-preview",  "variant": "high" },
+    "artistry":           { "model": "google/gemini-3-pro-preview",  "variant": "high" },
+    "writing":            { "model": "google/gemini-3-flash-preview" },
+    "deep":               { "model": "opencode/gpt-5.3-codex",       "variant": "medium" },
+    "ultrabrain":         { "model": "opencode/gpt-5.3-codex",       "variant": "xhigh" }
+  }
+}
+```
+
+**Phase 3 달성 효과**:
+- 메인 오케스트레이터(sisyphus)가 Opus급으로 업그레이드 → 작업 품질 대폭 향상 ✅
+- 계획/분석 에이전트(prometheus, metis)도 Opus급 → 더 정밀한 사전 계획 ✅
+- 코드 탐색(explore)이 grok-code-fast-1로 교체 → 속도 + 코드 특화 성능 ✅
+- librarian 유료 전환 → 레퍼런스 검색 품질 향상 ✅
+
+---
+
+### 단계별 로드맵 요약
+
+```
+Phase 1 (현재) ─────────────────────────────────────────────► 무료 중심
+   claude-sonnet-4-6 (sisyphus) + glm-4.7-free + kimi-k2.5-free
+   추가 비용: $0/월
+
+      ↓ Anthropic API 키 발급 + Google AI Pro 구독
+
+Phase 2 (안정화) ────────────────────────────────────────────► 인증 안전화
+   동일 모델, Claude 계정 정지 위험 해소 + Gemini 5시간 갱신
+   추가 비용: ~$20/월 (Google AI Pro)
+
+      ↓ claude-opus-4-6 업그레이드 + grok-code-fast-1 교체
+
+Phase 3 (최적, 최종 목표) ───────────────────────────────────► 최고 성능
+   claude-opus-4-6 (sisyphus/prometheus/metis) + grok-code-fast-1 (explore)
+   추가 비용: ~$40~60/월 (Anthropic API 사용량 포함)
+```
+
+---
+
+### Phase 업그레이드 체크리스트
+
+#### Phase 1 → Phase 2
+
+- [ ] Anthropic API 키 발급 (`console.anthropic.com`)
+- [ ] `opencode auth login` → Anthropic → API Key 방식으로 재설정
+- [ ] Google AI Pro 구독 (Google One → AI Pro)
+- [ ] antigravity 할당량 갱신 주기 확인 (5시간마다)
+
+#### Phase 2 → Phase 3
+
+- [ ] Anthropic API 잔액 충전 (claude-opus-4-6은 sonnet 대비 5배 비용)
+- [ ] oh-my-opencode.json에서 sisyphus 모델을 `anthropic/claude-opus-4-6`으로 변경
+- [ ] prometheus, metis 모델도 `anthropic/claude-opus-4-6`으로 변경
+- [ ] explore를 `xai/grok-code-fast-1`으로 변경 (XAI 인증 필요 시 별도 설정)
+- [ ] unspecified-high 카테고리를 `anthropic/claude-opus-4-6` (max)으로 변경
+- [ ] OpenCode Zen에서 `glm-4.7` (유료) 사용 가능 여부 확인 후 librarian 교체
 
 ---
 
